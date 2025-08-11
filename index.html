@@ -54,6 +54,7 @@
       border: none;
       border-radius: 50%;
       cursor: pointer;
+      transition: opacity 0.3s;
     }
     .qty {
       min-width: 24px;
@@ -89,22 +90,22 @@
 </head>
 <body>
   <h1>Ordina il tuo miele 🍯</h1>
-<div class="intro">
-  <h2>🐝 Chi siamo</h2>
-  <p>
-    Gramiele è molto più di un’azienda apistica: è un progetto familiare nato nel 2018 da una profonda passione per le api e il loro straordinario equilibrio naturale. Da allora, questo amore si è trasformato in una vera e propria missione condivisa, che oggi coinvolge tre membri della nostra famiglia.
-  </p>
+  <div class="intro">
+    <h2>🐝 Chi siamo</h2>
+    <p>
+      Gramiele è molto più di un’azienda apistica: è un progetto familiare nato nel 2018 da una profonda passione per le api e il loro straordinario equilibrio naturale. Da allora, questo amore si è trasformato in una vera e propria missione condivisa, che oggi coinvolge tre membri della nostra famiglia.
+    </p>
 
-  <h2>🌿 Il nostro approccio</h2>
-  <p>
-    Crediamo nel rispetto assoluto della vita delle api: le nutriamo solo in situazioni di reale emergenza e riduciamo al minimo qualsiasi forma di stress durante le visite agli alveari. Proteggiamo le arnie da agenti atmosferici, favoriamo le loro dinamiche sociali e le lasciamo libere di vivere secondo il loro ritmo, senza forzature.
-  </p>
+    <h2>🌿 Il nostro approccio</h2>
+    <p>
+      Crediamo nel rispetto assoluto della vita delle api: le nutriamo solo in situazioni di reale emergenza e riduciamo al minimo qualsiasi forma di stress durante le visite agli alveari. Proteggiamo le arnie da agenti atmosferici, favoriamo le loro dinamiche sociali e le lasciamo libere di vivere secondo il loro ritmo, senza forzature.
+    </p>
 
-  <h2>💛 La nostra filosofia</h2>
-  <p>
-    Coltiviamo un’apicoltura etica, consapevole e sostenibile. Ogni gesto nasce dall’osservazione paziente e dal rispetto della natura. Le api non sono solo produttrici di miele, ma vere e proprie custodi dell’ambiente: noi ci prendiamo cura di loro perché ci prendiamo cura del mondo.
-  </p>
-</div>
+    <h2>💛 La nostra filosofia</h2>
+    <p>
+      Coltiviamo un’apicoltura etica, consapevole e sostenibile. Ogni gesto nasce dall’osservazione paziente e dal rispetto della natura. Le api non sono solo produttrici di miele, ma vere e proprie custodi dell’ambiente: noi ci prendiamo cura di loro perché ci prendiamo cura del mondo.
+    </p>
+  </div>
 
   <form id="orderForm">
     <label for="name">Nome & Cognome</label>
@@ -124,12 +125,15 @@
       { label: 'Acacia 250g', price: 6 },
       { label: 'Acacia 500g', price: 11 },
       { label: 'Acacia 1kg', price: 20 },
-      { label: 'Millefiori Primaverile 250g', price: 5 },
-      { label: 'Millefiori Primaverile 500g', price: 8 },
-      { label: 'Millefiori Primaverile 1kg', price: 15 },
+      { label: 'Millefiori Estivo 250g', price: 5 },
+      { label: 'Millefiori Estivo 500g', price: 8 },
+      { label: 'Millefiori Estivo 1kg', price: 15 },
       { label: 'Millefiori Misto Castagno 250g', price: 5 },
       { label: 'Millefiori Misto Castagno 500g', price: 8 },
       { label: 'Millefiori Misto Castagno 1kg', price: 15 },
+      { label: 'Millefiori Primaverile 250g (ESAURITO)', price: 5, esaurito: true },
+      { label: 'Millefiori Primaverile 500g (ESAURITO)', price: 8, esaurito: true },
+      { label: 'Millefiori Primaverile 1kg (ESAURITO)', price: 15, esaurito: true },
     ];
 
     const productList = document.getElementById('productList');
@@ -144,7 +148,19 @@
 
       const label = document.createElement('div');
       label.className = 'label';
-      label.textContent = `${product.label} – ${product.price}€`;
+
+      if (product.esaurito) {
+        // Divido "Millefiori Primaverile 250g (ESAURITO)"
+        const testo = product.label;
+        const match = testo.match(/^(.+?)\s*(\(ESAURITO\))$/);
+        if (match) {
+          label.innerHTML = `<s>${match[1]}</s> <span>${match[2]}</span> – ${product.price}€`;
+        } else {
+          label.textContent = `${product.label} – ${product.price}€`;
+        }
+      } else {
+        label.textContent = `${product.label} – ${product.price}€`;
+      }
 
       const controls = document.createElement('div');
       controls.className = 'controls';
@@ -172,6 +188,15 @@
         qtySpan.textContent = quantities[i];
         updateTotal();
       };
+
+      if (product.esaurito) {
+        minusBtn.disabled = true;
+        plusBtn.disabled = true;
+        minusBtn.style.opacity = 0.5;
+        plusBtn.style.opacity = 0.5;
+        minusBtn.style.cursor = "not-allowed";
+        plusBtn.style.cursor = "not-allowed";
+      }
 
       controls.appendChild(minusBtn);
       controls.appendChild(qtySpan);
@@ -231,9 +256,9 @@
         body: JSON.stringify(orderData)
       });
 
-      // Telegram (fix: chat_id con "-" e gestione errori)
+      // Telegram
       const TELEGRAM_TOKEN = "7600235409:AAEYZG7_4ZROKOkxpUnULbAKrNQCIOCp8mo";
-      const CHAT_ID = "-4856856600"; // nota il "-" davanti!
+      const CHAT_ID = "-4856856600";
       try {
         await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
           method: "POST",
