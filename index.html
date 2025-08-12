@@ -86,10 +86,26 @@
       font-size: 18px;
       cursor: pointer;
     }
+    .prenotazioni-bloccate {
+      background: #ff5252;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
   <h1>Ordina il tuo miele 🍯</h1>
+
+  <!-- AVVISO PRENOTAZIONI BLOCCATE -->
+  <div class="prenotazioni-bloccate">
+    🚫 Prenotazioni Bloccate Fino al 30 Settembre 🚫
+  </div>
+
   <div class="intro">
     <h2>🐝 Chi siamo</h2>
     <p>
@@ -109,18 +125,20 @@
 
   <form id="orderForm">
     <label for="name">Nome & Cognome</label>
-    <input type="text" id="name" required />
+    <input type="text" id="name" required disabled />
 
     <label for="phone">Numero di telefono</label>
-    <input type="tel" id="phone" required />
+    <input type="tel" id="phone" required disabled />
 
     <div id="productList"></div>
 
     <div class="total">Totale: <span id="total">0</span>€</div>
-    <button type="submit">Invia Ordine</button>
+    <button type="submit" disabled>Invia Ordine</button>
   </form>
 
   <script>
+    const PRENOTAZIONI_BLOCCATE = true; // basta mettere false per riattivare in futuro
+
     const products = [
       { label: 'Acacia 250g', price: 6 },
       { label: 'Acacia 500g', price: 11 },
@@ -150,7 +168,6 @@
       label.className = 'label';
 
       if (product.esaurito) {
-        // Divido "Millefiori Primaverile 250g (ESAURITO)"
         const testo = product.label;
         const match = testo.match(/^(.+?)\s*(\(ESAURITO\))$/);
         if (match) {
@@ -189,7 +206,8 @@
         updateTotal();
       };
 
-      if (product.esaurito) {
+      // Disabilito pulsanti se esaurito o prenotazioni bloccate
+      if (product.esaurito || PRENOTAZIONI_BLOCCATE) {
         minusBtn.disabled = true;
         plusBtn.disabled = true;
         minusBtn.style.opacity = 0.5;
@@ -215,71 +233,13 @@
       totalEl.textContent = total.toFixed(2);
     }
 
-    document.getElementById('orderForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-
-      if (!name || !phone) {
-        alert('Inserisci nome e numero di telefono.');
-        return;
-      }
-
-      const orderLines = products
-        .map((p, i) => {
-          if (quantities[i] > 0) {
-            return `${quantities[i]} x ${p.label}`;
-          }
-          return null;
-        })
-        .filter(Boolean);
-
-      if (orderLines.length === 0) {
-        alert("Seleziona almeno un prodotto.");
-        return;
-      }
-
-      const msg = ` *Nuovo ordine da ${name}*\n Tel: ${phone}\n Prodotti:\n- ${orderLines.join('\n- ')}\n Totale: ${totalEl.textContent}€`;
-
-      const orderData = {
-        name,
-        phone,
-        items: orderLines.join("; "),
-        total: totalEl.textContent
+    // Se prenotazioni bloccate, disabilito invio form
+    if (PRENOTAZIONI_BLOCCATE) {
+      document.getElementById('orderForm').onsubmit = (e) => {
+        e.preventDefault();
+        alert("Le prenotazioni sono bloccate fino al 30 Settembre.");
       };
-
-      // Google Sheets
-      fetch("https://script.google.com/macros/s/AKfycbyz1ni2lQ3nAyKZuNnUqql_rtNOKhVw1FTLcjmaYBkzl2obyHkJ5AKlPFcNneVIOYOxvQ/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData)
-      });
-
-      // Telegram
-      const TELEGRAM_TOKEN = "7600235409:AAEYZG7_4ZROKOkxpUnULbAKrNQCIOCp8mo";
-      const CHAT_ID = "-4856856600";
-      try {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: CHAT_ID,
-            text: msg,
-            parse_mode: "Markdown"
-          })
-        });
-      } catch (err) {
-        alert("Errore invio Telegram: " + err.message);
-      }
-
-      alert("Ordine registrato! Ti contatteremo presto grazie!");
-
-      this.reset();
-      Object.keys(quantities).forEach(i => quantities[i] = 0);
-      document.querySelectorAll('.qty').forEach(q => q.textContent = '0');
-      updateTotal();
-    });
+    }
 
     updateTotal();
   </script>
