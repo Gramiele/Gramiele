@@ -123,22 +123,22 @@
       { label: 'Millefiori Estivo 500g', price: 8 },
       { label: 'Millefiori Estivo 1kg', price: 15 },
 
-      // Girasole (Prossimamente, non prenotabile)
-      { label: 'Miele di Girasole 250g (PROSSIMAMENTE)', price: 5, esaurito: true },
-      { label: 'Miele di Girasole 500g (PROSSIMAMENTE)', price: 9, esaurito: true },
-      { label: 'Miele di Girasole 1kg (PROSSIMAMENTE)', price: 16, esaurito: true },
+      // Acacia (prossimamente → non prenotabile, non sbarrato)
+      { label: 'Acacia 250g (PROSSIMAMENTE)', price: 6, prossimamente: true },
+      { label: 'Acacia 500g (PROSSIMAMENTE)', price: 11, prossimamente: true },
+      { label: 'Acacia 1kg (PROSSIMAMENTE)', price: 20, prossimamente: true },
 
-      // Millefiori Primaverile (Esaurito)
+      // Girasole (prossimamente → non prenotabile, non sbarrato)
+      { label: 'Miele di Girasole 250g (PROSSIMAMENTE)', price: 5, prossimamente: true },
+      { label: 'Miele di Girasole 500g (PROSSIMAMENTE)', price: 9, prossimamente: true },
+      { label: 'Miele di Girasole 1kg (PROSSIMAMENTE)', price: 16, prossimamente: true },
+
+      // Millefiori Primaverile (esaurito → sbarrato)
       { label: 'Millefiori Primaverile 250g (ESAURITO)', price: 5, esaurito: true },
       { label: 'Millefiori Primaverile 500g (ESAURITO)', price: 8, esaurito: true },
       { label: 'Millefiori Primaverile 1kg (ESAURITO)', price: 15, esaurito: true },
 
-      // Acacia (Esaurito)
-      { label: 'Acacia 250g (ESAURITO)', price: 6, esaurito: true },
-      { label: 'Acacia 500g (ESAURITO)', price: 11, esaurito: true },
-      { label: 'Acacia 1kg (ESAURITO)', price: 20, esaurito: true },
-
-      // Castagno (Esaurito)
+      // Castagno (esaurito → sbarrato)
       { label: 'Millefiori Misto Castagno 250g (ESAURITO)', price: 5, esaurito: true },
       { label: 'Millefiori Misto Castagno 500g (ESAURITO)', price: 8, esaurito: true },
       { label: 'Millefiori Misto Castagno 1kg (ESAURITO)', price: 15, esaurito: true },
@@ -156,10 +156,13 @@
 
       const label = document.createElement('div');
       label.className = 'label';
+
       // sbarrato solo se esaurito
-      label.innerHTML = product.esaurito
-        ? `<s>${product.label}</s> – ${product.price}€`
-        : `${product.label} – ${product.price}€`;
+      if (product.esaurito) {
+        label.innerHTML = `<s>${product.label}</s> – ${product.price}€`;
+      } else {
+        label.innerHTML = `${product.label} – ${product.price}€`;
+      }
 
       const controls = document.createElement('div');
       controls.className = 'controls';
@@ -188,8 +191,8 @@
         updateTotal();
       };
 
-      // Disabilito pulsanti SOLO se esaurito
-      if (product.esaurito) {
+      // Disabilito pulsanti se esaurito o prossimamente
+      if (product.esaurito || product.prossimamente) {
         minusBtn.disabled = true;
         plusBtn.disabled = true;
         minusBtn.style.opacity = 0.5;
@@ -215,7 +218,6 @@
       totalEl.textContent = total.toFixed(2);
     }
 
-    // ---- LOGICA ORDINE + GOOGLE SHEETS + TELEGRAM ----
     document.getElementById('orderForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
@@ -253,8 +255,8 @@
       });
 
       // Telegram
-      const TELEGRAM_TOKEN = "7600235409:AAEYZG7_4ZROKOkxpUnULbAKrNQCIOCp8mo";
-      const CHAT_ID = "-4856856600";
+      const TELEGRAM_TOKEN = "XXX";
+      const CHAT_ID = "XXX";
       try {
         await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
           method: "POST",
@@ -274,6 +276,6 @@
     });
 
     updateTotal();
-</script>
+  </script>
 </body>
 </html>
