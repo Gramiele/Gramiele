@@ -81,6 +81,15 @@
       font-size: 18px;
       cursor: pointer;
     }
+    .privacy-box {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #4e342e;
+    }
+    .privacy-box a {
+      color: #6b4f27;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -112,33 +121,33 @@
 
     <div id="productList"></div>
 
+    <!-- ✅ Nuova casella Privacy -->
+    <div class="privacy-box">
+      <input type="checkbox" id="privacy" required />
+      <label for="privacy">
+        Dichiaro di aver letto e accettato la
+        <a href="privacy.html" target="_blank">Privacy Policy</a>.
+      </label>
+    </div>
+
     <div class="total">Totale: <span id="total">0</span>€</div>
     <button type="submit">Invia Ordine</button>
   </form>
 
   <script>
     const products = [
-      // Millefiori Estivo (prenotabile)
       { label: 'Millefiori Estivo 250g', price: 5 },
       { label: 'Millefiori Estivo 500g', price: 8 },
       { label: 'Millefiori Estivo 1kg', price: 15 },
-
-      // Acacia (prossimamente → non prenotabile, non sbarrato)
-      { label: 'Acacia 250g (PROSSIMAMENTE)', price: 6, prossimamente: true },
-      { label: 'Acacia 500g (PROSSIMAMENTE)', price: 11, prossimamente: true },
-      { label: 'Acacia 1kg (PROSSIMAMENTE)', price: 20, prossimamente: true },
-
-      // Girasole (prossimamente → non prenotabile, non sbarrato)
-      { label: 'Miele di Girasole 250g (PROSSIMAMENTE)', price: 5, prossimamente: true },
-      { label: 'Miele di Girasole 500g (PROSSIMAMENTE)', price: 9, prossimamente: true },
-      { label: 'Miele di Girasole 1kg (PROSSIMAMENTE)', price: 16, prossimamente: true },
-
-      // Millefiori Primaverile (esaurito → sbarrato)
+      { label: 'Acacia 250g ', price: 6, prossimamente: false },
+      { label: 'Acacia 500g ', price: 11, prossimamente: false },
+      { label: 'Acacia 1kg ', price: 20, prossimamente: false },
+      { label: 'Miele di Girasole 250g ', price: 5, prossimamente: false },
+      { label: 'Miele di Girasole 500g ', price: 9, prossimamente: false },
+      { label: 'Miele di Girasole 1kg ', price: 16, prossimamente: false },
       { label: 'Millefiori Primaverile 250g (ESAURITO)', price: 5, esaurito: true },
       { label: 'Millefiori Primaverile 500g (ESAURITO)', price: 8, esaurito: true },
       { label: 'Millefiori Primaverile 1kg (ESAURITO)', price: 15, esaurito: true },
-
-      // Castagno (esaurito → sbarrato)
       { label: 'Millefiori Misto Castagno 250g (ESAURITO)', price: 5, esaurito: true },
       { label: 'Millefiori Misto Castagno 500g (ESAURITO)', price: 8, esaurito: true },
       { label: 'Millefiori Misto Castagno 1kg (ESAURITO)', price: 15, esaurito: true },
@@ -150,14 +159,11 @@
 
     products.forEach((product, i) => {
       quantities[i] = 0;
-
       const div = document.createElement('div');
       div.className = 'product';
 
       const label = document.createElement('div');
       label.className = 'label';
-
-      // sbarrato solo se esaurito
       if (product.esaurito) {
         label.innerHTML = `<s>${product.label}</s> – ${product.price}€`;
       } else {
@@ -191,7 +197,6 @@
         updateTotal();
       };
 
-      // Disabilito pulsanti se esaurito o prossimamente
       if (product.esaurito || product.prossimamente) {
         minusBtn.disabled = true;
         plusBtn.disabled = true;
@@ -222,9 +227,14 @@
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
+      const privacyAccepted = document.getElementById('privacy').checked;
 
       if (!name || !phone) {
         alert('Inserisci nome e numero di telefono.');
+        return;
+      }
+      if (!privacyAccepted) {
+        alert('Devi accettare la Privacy Policy.');
         return;
       }
 
@@ -246,7 +256,6 @@
         total: totalEl.textContent
       };
 
-      // Google Sheets
       fetch("https://script.google.com/macros/s/AKfycbyz1ni2lQ3nAyKZuNnUqql_rtNOKhVw1FTLcjmaYBkzl2obyHkJ5AKlPFcNneVIOYOxvQ/exec", {
         method: "POST",
         mode: "no-cors",
@@ -254,14 +263,11 @@
         body: JSON.stringify(orderData)
       });
 
-      // Telegram
-      const TELEGRAM_TOKEN = "7600235409:AAEYZG7_4ZROKOkxpUnULbAKrNQCIOCp8mo";
-      const CHAT_ID = "-4856856600";
       try {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        await fetch(`https://api.telegram.org/bot7600235409:AAEYZG7_4ZROKOkxpUnULbAKrNQCIOCp8mo/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: "Markdown" })
+          body: JSON.stringify({ chat_id: "-4856856600", text: msg, parse_mode: "Markdown" })
         });
       } catch (err) {
         alert("Errore invio Telegram: " + err.message);
